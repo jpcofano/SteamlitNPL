@@ -40,7 +40,7 @@ def generate_summary(text):
     inputs = tokenizer([text], padding="max_length", truncation=True, max_length=512, return_tensors="pt")
     input_ids = inputs.input_ids.to(device)
     attention_mask = inputs.attention_mask.to(device)
-    output = model.generate(input_ids, attention_mask=attention_mask, max_length=200, min_length=40, num_beams=4, repetition_penalty=2.0, length_penalty=1.0) 
+    output = model.generate(input_ids, attention_mask=attention_mask, max_length=250, min_length=40, num_beams=4, repetition_penalty=2.0, length_penalty=1.0) 
     return tokenizer.decode(output[0], skip_special_tokens=True)
 
 class WordSearch:

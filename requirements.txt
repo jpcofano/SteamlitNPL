@@ -1,13 +1,9 @@
 streamlit
-nltk.sentiment
-nltk.corpus
 nltk
 collections
 wordcloud
-matplotlib.pyplot
 transformers
 bs4
-nltk.tokenize
 torch
 transformers
 spacy

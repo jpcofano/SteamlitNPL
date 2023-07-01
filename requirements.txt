@@ -1,0 +1,14 @@
+streamlit
+nltk.sentiment
+nltk.corpus
+nltk
+collections
+wordcloud
+matplotlib.pyplot
+transformers
+bs4
+nltk.tokenize
+import torch
+transformers
+spacy
+string

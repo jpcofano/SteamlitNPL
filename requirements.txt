@@ -8,7 +8,7 @@ matplotlib.pyplot
 transformers
 bs4
 nltk.tokenize
-import torch
+torch
 transformers
 spacy
 string

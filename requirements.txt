@@ -6,3 +6,4 @@ transformers==4.24.0
 beautifulsoup4==4.11.1
 torch==1.12.1
 spacy==3.5.4
+spacy-legacy==3.0.12

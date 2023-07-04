@@ -26,7 +26,6 @@ nltk.download('punkt')
 nltk.download('vader_lexicon')
 st.set_option('deprecation.showPyplotGlobalUse', False)
 
-import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import sent_tokenize, word_tokenize
 from nltk.probability import FreqDist

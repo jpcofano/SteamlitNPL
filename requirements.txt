@@ -5,4 +5,4 @@ wordcloud==1.9.2
 transformers==4.24.0
 beautifulsoup4==4.11.1
 torch==1.12.1
-summarizer==0.0.7
+matplotlib==3.7.0

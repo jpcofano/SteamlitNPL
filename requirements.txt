@@ -4,10 +4,11 @@ torch
 wordcloud==1.9.2
 matplotlib==3.7.1
 pandas==1.5.3
-spacy==3.6.0
+spacy==3.2.0
 transformers==4.29.2
 requests==2.29.0
 reportlab==3.6.12
 Pillow==9.4.0
 sentencepiece==0.1.99
+pyperclip
 https://github.com/explosion/spacy-models/releases/download/es_core_news_sm-3.1.0/es_core_news_sm-3.1.0.tar.gz

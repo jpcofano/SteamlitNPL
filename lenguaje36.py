@@ -1,3 +1,12 @@
+import os
+import subprocess
+
+def upgrade_pip():
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "pip"])
+
+if __name__ == "__main__":
+    upgrade_pip()
+
 import streamlit as st
 import nltk
 import torch

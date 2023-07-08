@@ -81,7 +81,7 @@ def analyze_representativeness(sentences):
         scores.append(score)
     return scores
 
-def print_summary_sentences(text, summary_length, max_words=40):
+def print_summary_sentences(text, summary_length, max_words=100):
     doc = nlp(text)
     sentences = list(doc.sents)
     scores = analyze_representativeness(sentences)
@@ -104,7 +104,7 @@ def print_summary_sentences(text, summary_length, max_words=40):
     return summary_sentences
 
 
-def generate_extractive_summary(text, summary_length, max_words=40):
+def generate_extractive_summary(text, summary_length, max_words=100):
     doc = nlp(text)
     sentences = list(doc.sents)
     scores = analyze_representativeness(sentences)
@@ -277,7 +277,7 @@ def generate_summary_bert(text, summary_length):
 def generate_summary_bart(text, summary_length):
     bart_tokenizer = AutoTokenizer.from_pretrained("facebook/bart-large-cnn")
     bart_model = AutoModelForSeq2SeqLM.from_pretrained('facebook/bart-large-cnn')
-    inputs = bart_tokenizer([text], max_length=1024, truncation=True, return_tensors='pt')
+    inputs = bart_tokenizer([text], _length=1024, truncation=True, return_tensors='pt')
     summary_ids = bart_model.generate(inputs['input_ids'], num_beams=4, max_length=summary_length, early_stopping=True)
     summary = bart_tokenizer.decode(summary_ids[0], skip_special_tokens=True)
     return summary

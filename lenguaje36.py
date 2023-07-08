@@ -25,6 +25,7 @@ from reportlab.lib.pagesizes import letter
 from transformers import PegasusTokenizer
 import sentencepiece as spm
 from transformers import PegasusForConditionalGeneration, PegasusTokenizer
+import pyperclip
 
 nlp = spacy.load('es_core_news_sm')
 # nlp = spacy.load('./es_core_news_sm-3.1.0')
@@ -39,10 +40,17 @@ if 'resultados' not in st.session_state:
 #         if len(sentence) <= 20:
 #             summary.append(sentence.text)  # Extraer el texto del objeto Span
 #     return ' '.join(summary)
+
+
 def copiar_texto(texto):
     # Copiar el texto al portapapeles en Streamlit
     st.write(texto)
-    st.button("Copiar al portapapeles", on_click=lambda: st.write(texto, use_column_width='auto'))
+    st.button("Copiar al portapapeles", on_click=lambda: st.experimental_set_clipboard(texto))
+
+
+
+# Resto del código...
+
 
 def guardar_texto(texto):
     # Guardar el texto en un archivo de texto y descargarlo en Streamlit
@@ -189,13 +197,26 @@ nltk.download('stopwords')
 nltk.download('punkt')
 nltk.download('vader_lexicon')
 
-def save_image(url):
-    response = requests.get(url, stream=True)
-    if response.status_code == 200:
-        with open("image.jpg", "wb") as file:
-            file.write(response.content)
-        st.success("Imagen guardada exitosamente.")
+# def save_image(url):
+#     response = requests.get(url, stream=True)
+#     if response.status_code == 200:
+#         with open("image.jpg", "wb") as file:
+#             file.write(response.content)
+#         st.success("Imagen guardada exitosamente.")
 
+def save_image(imagen, nombre_archivo):
+    # Guardar la imagen en BytesIO
+    bytes_io = BytesIO()
+    imagen.savefig(bytes_io, format='png')
+    bytes_io.seek(0)
+
+    # Crear el botón de descarga
+    st.download_button(
+        label='Descargar Imagen',
+        data=bytes_io,
+        file_name=nombre_archivo,
+        mime='image/png'
+    )
         
 def remove_punctuation(text):
     text = re.sub(f'[{string.punctuation}]', '', text)
@@ -527,6 +548,7 @@ if st.button("Mostrar"):
         plt.title("Palabras más frecuentes")
         plt.xticks(rotation=45)
         st.pyplot(plt.gcf())
+        save_image(plt, "palabras_frecuentes.png")
         resultados.append(("Palabras más frecuentes", top_words))
     else:
         st.warning("No se encontraron palabras frecuentes.")
@@ -615,7 +637,7 @@ if st.button("Frases"):
 
     if frases:
         frases_texto = "\n".join(frases)  # Unir las frases en un solo texto separadas por saltos de línea
-        copiar_texto(frases_texto)
+        st.button("Copiar al portapapeles", on_click=lambda: pyperclip.copy(frases_texto))
         guardar_texto(frases_texto)
 
 

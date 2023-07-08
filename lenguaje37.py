@@ -11,7 +11,6 @@ import string
 import pandas as pd
 import re
 import base64
-# swdwd
 # import os
 from io import BytesIO
 import requests
@@ -85,7 +84,7 @@ def analyze_representativeness(sentences):
         scores.append(score)
     return scores
 
-def print_summary_sentences(text, summary_length, max_words=40):
+def print_summary_sentences(text, summary_length, max_words=80):
     doc = nlp(text)
     sentences = list(doc.sents)
     scores = analyze_representativeness(sentences)

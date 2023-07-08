@@ -1,20 +1,3 @@
-#import os
-#import subprocess
-
-#def upgrade_pip():
- #   subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "pip"])
-
-#if __name__ == "__main__":
-#   upgrade_pip()
-
-#import sys
-#import subprocess
-
-#def upgrade_pip():
-#    subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "pip"])
-
-#upgrade_pip()
-
 import streamlit as st
 import nltk
 import torch
@@ -43,6 +26,7 @@ from transformers import PegasusTokenizer
 import sentencepiece as spm
 from transformers import PegasusForConditionalGeneration, PegasusTokenizer
 import pyperclip
+import re
 
 nlp = spacy.load('es_core_news_sm')
 # nlp = spacy.load('./es_core_news_sm-3.1.0')
@@ -76,6 +60,11 @@ def guardar_texto(texto):
     st.markdown(href, unsafe_allow_html=True)
 # from nltk.corpus import stopwords
 
+def get_stopwords():
+    with open('stopwords-es.txt', 'r', encoding='utf-8') as file:
+        stopwords_list = file.read().split('\n')
+    return stopwords_list
+
 
 def get_keywords(text):
     words = set(text.split())
@@ -92,27 +81,52 @@ def analyze_representativeness(sentences):
         scores.append(score)
     return scores
 
-def print_summary_sentences(text, summary_length):
+def print_summary_sentences(text, summary_length, max_words=40):
     doc = nlp(text)
     sentences = list(doc.sents)
     scores = analyze_representativeness(sentences)
     top_sentences = sorted(zip(sentences, scores), key=lambda x: x[1], reverse=True)[:summary_length]
     
-    return [sentence.text for sentence, score in top_sentences]
+    # Limitar la longitud de las sentencias al máximo de palabras permitido
+    summary_sentences = []
+    for sentence, score in top_sentences:
+        words = sentence.text.split()
+        if len(words) > max_words:
+            words = words[:max_words]
+            # Agregar un punto al final si no existe
+            if not re.search(r'[.!?]$', words[-1]):
+                words[-1] += '.'
+            sentence_text = ' '.join(words)
+        else:
+            sentence_text = sentence.text
+        summary_sentences.append(sentence_text)
+    
+    return summary_sentences
 
 
+def generate_extractive_summary(text, summary_length, max_words=40):
+    doc = nlp(text)
+    sentences = list(doc.sents)
+    scores = analyze_representativeness(sentences)
+    top_sentences = sorted(zip(sentences, scores), key=lambda x: x[1], reverse=True)[:summary_length]
+    
+    # Limitar la longitud de las sentencias al máximo de palabras permitido
+    summary_sentences = []
+    for sentence, score in top_sentences:
+        words = sentence.text.split()
+        if len(words) > max_words:
+            words = words[:max_words]
+            # Agregar un punto al final si no existe
+            if not re.search(r'[.!?]$', words[-1]):
+                words[-1] += '.'
+            sentence_text = ' '.join(words)
+        else:
+            sentence_text = sentence.text
+        summary_sentences.append(sentence_text)
+    
+    return ' '.join(summary_sentences)
 
 
-
-
-def generate_extractive_summary(text_input, summary_length):
-    doc = nlp(text_input)
-    summary = []
-    scores = analyze_representativeness(list(doc.sents))
-    for i, sentence in enumerate(doc.sents):
-        if i < len(scores) and len(sentence.text) <= 8000 and scores[i] > 0.5:
-            summary.append(sentence.text)
-    return ' '.join(summary[:10])  # Limitar el resumen a las 10 primeras frases
 
 
 # text = 'This is a sentence about keywords. This is a sentence about topics. This is a sentence about both keywords and topics.'
@@ -375,10 +389,6 @@ def generar_resumen(summarizer, text_input, summary_length):
         st.error(f"Se ha producido un error: {str(e)}")
 
 
-def get_stopwords():
-    with open('stopwords-es.txt', 'r', encoding='utf-8') as file:
-        stopwords_list = file.read().split('\n')
-    return stopwords_list
 
 def get_top_words(text, stop_words, num_words, min_word_length):
     words = nltk.word_tokenize(text.lower())
@@ -591,7 +601,7 @@ with st.expander("Seleccionar Modelo"):
 summarizer = selected_option if selected_option else ""
 st.write("Selección total:", summarizer)
 
-summary_length = st.slider("Longitud del resumen", min_value=50, max_value=1000, value=250, step=50)
+summary_length = st.slider("Longitud del resumen", min_value=10, max_value=1000, value=250, step=5)
 
 if st.button("Generar Resumen"):
     summary = generar_resumen(summarizer, text_input, summary_length)

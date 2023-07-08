@@ -429,6 +429,7 @@ def generar_resumen(summarizer, text_input, summary_length):
             # summary = generate_summary_marian_spanish(text_input, summary_length)
             texto_adicional = "Cloud Streamlit sin recursos, ejecutar local"
             # st.write("Texto adicional:")
+            st.write(texto_adicional)
         elif summarizer == "Pegasus":
             # summary = generate_summary_Pegasus(text_input, summary_length)
             texto_adicional = "Cloud Streamlit sin recursos, ejecutar local"

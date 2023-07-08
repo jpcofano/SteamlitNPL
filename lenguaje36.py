@@ -312,12 +312,11 @@ def generate_summary_marian_spanish(text, summary_length):
 
 
 
-model_name = "google/pegasus-xsum"
-# device = "cuda" if torch.cuda.is_available() else "cpu"
-tokenizer = PegasusTokenizer.from_pretrained(model_name)
-model = PegasusForConditionalGeneration.from_pretrained(model_name).to(device)
- 
 def generate_summary_Pegasus(text, summary_length):
+    model_name = "google/pegasus-xsum"
+    # device = "cuda" if torch.cuda.is_available() else "cpu"
+    tokenizer = PegasusTokenizer.from_pretrained(model_name)
+    model = PegasusForConditionalGeneration.from_pretrained(model_name).to(device)
     batch = tokenizer([text], truncation=True, padding="longest", return_tensors="pt").to(device)
     translated = model.generate(**batch, max_length=summary_length)
     summary = tokenizer.batch_decode(translated, skip_special_tokens=True)

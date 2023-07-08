@@ -331,6 +331,39 @@ def generate_summary_bart(text, summary_length):
     summary = bart_tokenizer.decode(summary_ids[0], skip_special_tokens=True)
     return summary
 
+def generate_summary_bart2(text, summary_length, min_length):
+    bart_tokenizer = AutoTokenizer.from_pretrained("facebook/bart-large-cnn")
+    bart_model = AutoModelForSeq2SeqLM.from_pretrained('facebook/bart-large-cnn')
+    inputs = bart_tokenizer([text], max_length=1024, truncation=True, return_tensors='pt')
+
+    generated_summaries = bart_model.generate(
+        inputs['input_ids'],
+        num_beams=6,
+        max_length=summary_length + min_length,  # Aumentar la longitud máxima para permitir recortar
+        early_stopping=True,
+        num_return_sequences=5  # Generar múltiples resúmenes
+    )
+
+    summaries = []
+
+    for summary_ids in generated_summaries:
+        summary = bart_tokenizer.decode(summary_ids, skip_special_tokens=True)
+
+        # Verificar la longitud mínima del resumen generado
+        if len(summary) >= min_length:
+            summaries.append(summary)
+
+        # Detener la generación si se han encontrado suficientes resúmenes
+        if len(summaries) == 3:
+            break
+    # Seleccionar el resumen más largo
+    if summaries:
+        summary = max(summaries, key=len)
+    else:
+        summary = ""
+
+    return summary
+
 # Load model directly
 
 
@@ -423,6 +456,9 @@ def generar_resumen(summarizer, text_input, summary_length):
             texto_adicional = "Cloud Streamlit sin recursos, ejecutar local"
             # st.write("Texto adicional:")
             st.write(texto_adicional)
+        elif summarizer == "BERT3":
+                min_length=200
+                summary = generate_summary_bart2(text_input, summary_length, min_length)        
         elif summarizer == "DeepESP":
             summary = generate_summary_DeepESP_spanish(text_input, summary_length)
         elif summarizer == "marian":
@@ -658,7 +694,7 @@ st.subheader("Generar Resumen")
 # Crear la interfaz de Streamlit
 # summarizer = st.selectbox("Seleccionar summarizer", ["BART", "BERT", "BERT2", "T5", "marian", "Pegasus", "flax", "gextractive"])
 # text_input = st.text_area("Introducir texto")
-summarizer_options = ["BART", "BERT", "BERT2", "DeepESP", "marian", "Pegasus", "flax", "gextractive","gextractive2"]
+summarizer_options = ["BART", "BERT", "BERT2", "BERT3", "DeepESP", "marian", "Pegasus", "flax", "gextractive","gextractive2"]
 
 with st.expander("Seleccionar Modelo"):
     selected_option = st.radio("Modelo:", summarizer_options, index=summarizer_options.index("Pegasus"))

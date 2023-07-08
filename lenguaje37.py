@@ -426,7 +426,9 @@ def generar_resumen(summarizer, text_input, summary_length):
         elif summarizer == "DeepESP":
             summary = generate_summary_DeepESP_spanish(text_input, summary_length)
         elif summarizer == "marian":
-            summary = generate_summary_marian_spanish(text_input, summary_length)
+            # summary = generate_summary_marian_spanish(text_input, summary_length)
+            texto_adicional = "Cloud Streamlit sin recursos, ejecutar local"
+            # st.write("Texto adicional:")
         elif summarizer == "Pegasus":
             # summary = generate_summary_Pegasus(text_input, summary_length)
             texto_adicional = "Cloud Streamlit sin recursos, ejecutar local"

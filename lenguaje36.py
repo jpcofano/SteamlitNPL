@@ -73,9 +73,9 @@ def print_summary_sentences(text, summary_length):
     scores = analyze_representativeness(sentences)
     top_sentences = sorted(zip(sentences, scores), key=lambda x: x[1], reverse=True)[:summary_length]
     
-    for sentence, score in top_sentences:
-        st.write(f"Sentence: {sentence.text}")
-        # st.write(f"Score: {score}\n")
+    return [sentence.text for sentence, score in top_sentences]
+
+
 
 
 
@@ -243,20 +243,15 @@ def generate_summary_bart_spanish(text, summary_length):
     return summary
 
 
-# T5 model
-# Load model directly
-
-
-
-def generate_summary_t5_spanish(text, summary_length):
+def generate_summary_DeepESP_spanish(text, summary_length):
     num_beams = 4  # Número de secuencias generadas
     temperature = 0.8  # Controla la aleatoriedad de la generación (valores más altos = más aleatorio)
-    top_k = 50  # Controla la diversidad de las palabras generadas (valores más altos = más diversidad)
-    t5_tokenizer = AutoTokenizer.from_pretrained("DeepESP/gpt2-spanish")
-    t5_model = AutoModelForCausalLM.from_pretrained("DeepESP/gpt2-spanish")
-    inputs = t5_tokenizer([text], max_length=100, truncation=True, return_tensors='pt')
-    summary_ids = t5_model.generate(inputs['input_ids'],  num_beams=num_beams, max_length=summary_length, early_stopping=True,temperature=temperature, top_k=top_k)
-    summary = t5_tokenizer.decode(summary_ids[0], skip_special_tokens=True)
+    top_k = 80  # Controla la diversidad de las palabras generadas (valores más altos = más diversidad)
+    DeepESP_tokenizer = AutoTokenizer.from_pretrained("DeepESP/gpt2-spanish")
+    DeepESP_model = AutoModelForCausalLM.from_pretrained("DeepESP/gpt2-spanish")
+    inputs = DeepESP_tokenizer([text], max_length=100, truncation=True, return_tensors='pt')
+    summary_ids = DeepESP_model.generate(inputs['input_ids'],  num_beams=num_beams, max_length=summary_length, early_stopping=True,temperature=temperature, top_k=top_k)
+    summary = DeepESP_tokenizer.decode(summary_ids[0], skip_special_tokens=True)
     return summary
 
 # Marian model
@@ -321,8 +316,8 @@ def generar_resumen(summarizer, text_input, summary_length):
             summary = generate_summary_bert(text_input, summary_length)
         elif summarizer == "BERT2":
             summary = generate_summary_bart_spanish(text_input, summary_length)
-        elif summarizer == "T5":
-            summary = generate_summary_t5_spanish(text_input, summary_length)
+        elif summarizer == "DeepESP":
+            summary = generate_summary_DeepESP_spanish(text_input, summary_length)
         elif summarizer == "marian":
             summary = generate_summary_marian_spanish(text_input, summary_length)
         elif summarizer == "Pegasus":
@@ -465,7 +460,8 @@ if st.button("Analizar"):
 
     # sentiment_label, sentiment_scores = analyze_sentiment(text_input, language)
     col1, col2 = st.columns(2)
-    col1.write("Puntuación de sentimiento:", sentiment_total, get_sentiment_label(sentiment_total))
+    col1.write(["Puntuación de sentimiento:", sentiment_total])
+    col2.write(get_sentiment_label(sentiment_total))
     col2.image(get_sentiment_image(sentiment_total))
     
     fig, ax = plt.subplots(2, 2, figsize=(12, 8))
@@ -506,8 +502,8 @@ if st.button("Analizar"):
     download_link = get_pdf_download_link(pdf_filename, "Descargar PDF")
     st.markdown(download_link, unsafe_allow_html=True)
 # Mostrar los resultados generados en la interfaz
-    for resultado in st.session_state.resultados:
-        st.write(resultado)
+    # for resultado in st.session_state.resultados:
+    #     st.write(resultado)
 
 # Separador
 # st.markdown('<div class="separator"></div>', unsafe_allow_html=True)
@@ -547,7 +543,7 @@ st.subheader("Generar Resumen")
 # Crear la interfaz de Streamlit
 # summarizer = st.selectbox("Seleccionar summarizer", ["BART", "BERT", "BERT2", "T5", "marian", "Pegasus", "flax", "gextractive"])
 # text_input = st.text_area("Introducir texto")
-summarizer_options = ["BART", "BERT", "BERT2", "T5", "marian", "Pegasus", "flax", "gextractive"]
+summarizer_options = ["BART", "BERT", "BERT2", "DeepESP", "marian", "Pegasus", "flax", "gextractive"]
 
 with st.expander("Seleccionar Modelo"):
     selected_option = st.radio("Modelo:", summarizer_options, index=summarizer_options.index("Pegasus"))
@@ -613,7 +609,16 @@ st.title("Mejores Frases")
 summary_length = st.slider("Cantidad de Frases", 2, 10, 2)
 
 if st.button("Frases"):
-    print_summary_sentences(text_input, summary_length)    
+    frases = print_summary_sentences(text_input, summary_length)
+    for i, frase in enumerate(frases, start=1):
+        st.write(f"Frase {i}: {frase}")
+
+    if frases:
+        frases_texto = "\n".join(frases)  # Unir las frases en un solo texto separadas por saltos de línea
+        copiar_texto(frases_texto)
+        guardar_texto(frases_texto)
+
+
 # Mostrar los resultados generados en la interfaz
 # for contenido in st.session_state.resultados:
 #     st.write(contenido)

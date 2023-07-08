@@ -11,4 +11,5 @@ requests==2.31.0
 reportlab==4.0.4
 Pillow==9.5.0
 sentencepiece==0.1.99
+pyperclip==1.8.0
 https://github.com/explosion/spacy-models/releases/download/es_core_news_sm-3.6.0/es_core_news_sm-3.6.0.tar.gz

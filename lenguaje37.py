@@ -457,8 +457,11 @@ def generar_resumen(summarizer, text_input, summary_length):
             # st.write("Texto adicional:")
             st.write(texto_adicional)
         elif summarizer == "BERT3":
-                min_length=200
-                summary = generate_summary_bart2(text_input, summary_length, min_length)        
+            #    min_length=200
+            #    summary = generate_summary_bart2(text_input, summary_length, min_length)
+                texto_adicional = "Cloud Streamlit sin recursos, ejecutar local"
+                # st.write("Texto adicional:")
+                st.write(texto_adicional)
         elif summarizer == "DeepESP":
             summary = generate_summary_DeepESP_spanish(text_input, summary_length)
         elif summarizer == "marian":

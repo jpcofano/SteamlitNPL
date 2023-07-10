@@ -545,7 +545,7 @@ st.set_page_config(
 # Título principal
 # Display logo
 # st.image(logo_url, width=1500)
-image = "logo.png"
+# image = "logo.png"
 st.image(image, width=800)
 st.title("Procesamiento de Texto")
 

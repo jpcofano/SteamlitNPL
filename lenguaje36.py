@@ -665,11 +665,9 @@ if st.button("Generar y Guardar en PDF"):
 
     max_words = st.slider("Cantidad de Palabras en la Nube", 25, 300, 150)
     cloud_type = st.radio("Tipo de Nube", ["wordcloud", "barchart"])
-    color_map = st.selectbox("Mapa de Colores",
-                             ["viridis", "plasma", "inferno", "magma", "cividis", "gray", "spring", "summer", "autumn", "winter", "Continuación del código completo modificado:
-
-```python
- "cool", "Wistia", "hot", "coolwarm", "bwr", "seismic", "twilight", "afmhot", "rainbow", "jet"])
+color_map = st.selectbox("Mapa de Colores",
+                         ["viridis", "plasma", "inferno", "magma", "cividis", "gray", "spring", "summer", "autumn", "winter",
+                          "cool", "Wistia", "hot", "coolwarm", "bwr", "seismic", "twilight", "afmhot", "rainbow", "jet"])
 colores_fondo = st.selectbox("Color de Fondo", ['white', 'black', 'gray', 'red', 'blue', 'green', 'yellow', 'purple', 'orange', 'pink'])
 
 if st.button("Generar y Guardar en PDF"):

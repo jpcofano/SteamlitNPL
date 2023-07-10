@@ -26,6 +26,15 @@ def get_stopwords():
         stopwords_list = file.read().split('\n')
     return stopwords_list
 
+# Función para obtener palabras clave de un texto utilizando TF-IDF
+def get_keywords(text, top_n=10):
+    stop_words = set(get_stopwords())
+    tokens = nltk.word_tokenize(text.lower())
+    tokens = [token for token in tokens if token.isalpha() and token not in stop_words]
+    fdist = nltk.FreqDist(tokens)
+    keywords = [word for word, _ in fdist.most_common(top_n)]
+    return keywords
+
 # Función para analizar la representatividad de las oraciones en un texto
 def analyze_representativeness(sentences):
     keywords = set(get_keywords(' '.join([sentence.text for sentence in sentences])))
@@ -103,7 +112,9 @@ st.image(image, width=800)
 st.title("Procesamiento de Texto")
 
 # Barra lateral
-st.sidebar.title("Ingrese el texto")
+st.sidebar.title("Configuración")
+summary_length = st.sidebar.slider("Longitud del resumen", min_value=1, max_value=10, value=3)
+max_words = st.sidebar.slider("Máximo de palabras por oración", min_value=10, max_value=100, value=40)
 text_input = st.sidebar.text_area("Ingrese el texto")
 uploaded_files = st.sidebar.file_uploader("Cargar archivos .txt", type="txt", accept_multiple_files=True)
 
@@ -151,12 +162,18 @@ sentiment_total = np.mean(sentiment_scores)
 # Mostrar la puntuación de sentimiento promedio
 st.write(f"Puntuación de sentimiento: {sentiment_total}")
 
-# Almacenar los resultados en la lista de contenido
-content = []
-content.append(("Análisis de Sentimiento", sentiment_total))
+# Generar resumen extractivo
+if st.button("Generar Resumen"):
+    summary = generate_extractive_summary(text_input, summary_length, max_words)
 
-# Resto del código...
+    # Mostrar el resumen
+    st.subheader("Resumen")
+    st.write(summary)
 
-# Obtener el enlace de descarga para el PDF
-pdf_link = get_pdf_download_link("resultados.pdf", content)
-st.markdown(pdf_link, unsafe_allow_html=True)
+    # Almacenar los resultados en la lista de contenido
+    content = [("Análisis de Sentimiento", sentiment_total),
+               ("Resumen", summary)]
+
+    # Mostrar enlace de descarga del PDF
+    pdf_link = get_pdf_download_link("resultados.pdf", content)
+    st.markdown(pdf_link, unsafe_allow_html=True)

@@ -598,9 +598,6 @@ if st.button("Analizar"):
     sentiment_df = pd.DataFrame(sentiment_scores)
     sentiment_total = sentiment_df['compound'].sum() / word_count  # Dividir la puntuación por la cantidad de palabras
 
-    # Resto del código...
-
-
     # sentiment_label, sentiment_scores = analyze_sentiment(text_input, language)
     col1, col2 = st.columns(2)
     col1.write(["Puntuación de sentimiento:", sentiment_total])
@@ -683,11 +680,14 @@ st.subheader("Generar Resumen")
 
 # Separador
 # st.markdown('<div class="separator"></div>', unsafe_allow_html=True)
+        # st.write(summary)
+
+        # Mostrar el texto adicional
 
 # Crear la interfaz de Streamlit
 # summarizer = st.selectbox("Seleccionar summarizer", ["BART", "BERT", "BERT2", "T5", "marian", "Pegasus", "flax", "gextractive"])
 # text_input = st.text_area("Introducir texto")
-summarizer_options = ["BART", "BERT", "BERT2", "DeepESP", "marian", "Pegasus", "flax", "gextractive"]
+summarizer_options = ["BART", "BERT", "BERT2", "BERT3", "DeepESP", "marian", "Pegasus", "flax", "gextractive","gextractive2"]
 
 with st.expander("Seleccionar Modelo"):
     selected_option = st.radio("Modelo:", summarizer_options, index=summarizer_options.index("Pegasus"))
@@ -699,6 +699,7 @@ st.write("Selección total:", summarizer)
 summary_length = st.slider("Longitud del resumen", min_value=10, max_value=1000, value=250, step=5)
 
 if st.button("Generar Resumen"):
+    st.write("Resumen generado:")
     summary = generar_resumen(summarizer, text_input, summary_length)
     if summary:
         copiar_texto(summary)
@@ -747,7 +748,7 @@ if st.button("Generar"):
             st.warning("No se encontraron palabras frecuentes.")
 
 # Interfaz de Streamlit
-st.title("Mejores Frases")
+st.title("Frases")
 
 # Botón para mostrar las 10 mejores frases
 summary_length = st.slider("Cantidad de Frases", 2, 10, 2)

@@ -29,8 +29,7 @@ import pyperclip
 import re
 from string import punctuation
 from heapq import nlargest
-import io
-from fpdf import FPDF
+
 
 nlp = spacy.load('es_core_news_sm')
 # nlp = spacy.load('./es_core_news_sm-3.1.0')
@@ -234,6 +233,33 @@ def analyze_sentiment(text, language):
 # Lista para almacenar el contenido ejecutado
 resultados = []
 
+def guardar_pdf(content):
+    packet = BytesIO()
+    can = canvas.Canvas(packet)
+    y = 720
+    for line in content:
+        if isinstance(line, tuple):  # Verificar si es una tupla
+            line = line[0]  # Obtener el primer elemento de la tupla
+        line_encoded = line.encode('utf-8')  # Codificar la cadena en UTF-8
+        can.drawString(10, y, line_encoded)
+        y -= 20
+    can.save()
+
+    packet.seek(0)
+    pdf_filename = "resultados.pdf"
+    with open(pdf_filename, "wb") as file:
+        file.write(packet.getvalue())
+
+    return pdf_filename
+
+
+
+# Obtener enlace de descarga para el archivo PDF
+def get_pdf_download_link(filename, text):
+    with open(filename, "rb") as file:
+        b64 = base64.b64encode(file.read()).decode()
+    href = f'<a href="data:application/pdf;base64,{b64}" download="{filename}">{text}</a>'
+    return href
 
 
 def get_image_download_link(img_bytes, filename, text):
@@ -450,7 +476,8 @@ def generar_resumen(summarizer, text_input, summary_length):
             summary = summarize_text_Extractive2(text_input, summary_length)
         else:
             raise ValueError("Summarizer no válido.")
-                # st.write(summary)
+        
+        # st.write(summary)
         resultados.append(("Generar Resumen", summary))       
         return summary
     except Exception as e:
@@ -492,77 +519,11 @@ def generate_wordcloud(text, max_words, stop_words, color_map, colores_fondo, mi
     st.markdown(href, unsafe_allow_html=True)
     return href
 
-def guardar_pdf(content):
-    packet = BytesIO()
-    can = canvas.Canvas(packet)
-    y = 720
-    for line in content:
-        if isinstance(line, tuple):  # Verificar si es una tupla
-            line = line[0]  # Obtener el primer elemento de la tupla
-        line_encoded = line.encode('utf-8')  # Codificar la cadena en UTF-8
-        can.drawString(10, y, line_encoded)
-        y -= 20
-    can.save()
-
-    packet.seek(0)
-    pdf_filename = "resultados.pdf"
-    with open(pdf_filename, "wb") as file:
-        file.write(packet.getvalue())
-
-    return pdf_filename
-
-
-
-# Obtener enlace de descarga para el archivo PDF
-def get_pdf_download_link(filename, text):
-    with open(filename, "rb") as file:
-        b64 = base64.b64encode(file.read()).decode()
-    href = f'<a href="data:application/pdf;base64,{b64}" download="{filename}">{text}</a>'
-    return href
-
-
-# Función para guardar los resultados en un archivo PDF
-def guardar_pdf_resultados(resultados):
-    # Crear un archivo PDF
-    packet = BytesIO()
-    can = canvas.Canvas(packet)
-
-    y = 720
-    for contenido in resultados:
-        can.setFont("Arial", "B", 14)
-        can.drawString(10, y, contenido[0])
-        y -= 20
-
-        if isinstance(contenido[1], str):
-            can.setFont("Arial", "", 12)
-            can.drawString(10, y, contenido[1])
-            y -= 20
-        elif isinstance(contenido[1], list):
-            for item in contenido[1]:
-                can.setFont("Arial", "", 12)
-                can.drawString(10, y, f"- {item[0]}: {item[1]}")
-                y -= 20
-
-        y -= 10
-
-    can.save()
-
-    packet.seek(0)
-    pdf_filename = "resultados.pdf"
-    with open(pdf_filename, "wb") as file:
-        file.write(packet.getvalue())
-
-    return pdf_filename
-
-
-# Variable de estado para el botón "Guardar en PDF"
-if 'guardar_pdf_flag' not in st.session_state:
-    st.session_state.guardar_pdf_flag = False
-
 
 # Inicializar el estado
 if 'resultados' not in st.session_state:
     st.session_state.resultados = []
+
 
 # Estilo de página
 st.set_page_config(
@@ -588,104 +549,115 @@ uploaded_files = st.sidebar.file_uploader("Cargar archivos .txt", type="txt", ac
 if uploaded_files is not None:
     for file in uploaded_files:
         text_input += file.read().decode("utf-8")
-
 # Separador
 st.markdown('<div class="separator"></div>', unsafe_allow_html=True)
 
 
-# Botón de generar resultados
-if st.sidebar.button("Generar Contenidos"):
-    generar_resultados_flag = True
-else:
-    generar_resultados_flag = False
-
-# Guardar en PDF
 if st.sidebar.button("Guardar en PDF"):
-    st.session_state.guardar_pdf_flag = True
-else:
-    st.session_state.guardar_pdf_flag = False
-    
-# Mostrar las opciones de configuración del usuario
-if generar_resultados_flag:
-    st.sidebar.subheader("Configuración del Usuario")
-summary_length1 = st.slider("Cantidad de Frases", 2, 10, 2)
-num_words = st.slider("Cantidad de Palabras", 5, 25, 10)
-max_words = st.slider("Cantidad de Palabras en la Nube", 25, 300, 150)
-cloud_type = st.radio("Tipo de Nube", ["wordcloud", "barchart"])
-color_map = st.selectbox("Mapa de Colores", ["viridis", "plasma", "inferno", "magma", "cividis", "gray", "spring", "summer", "autumn", "winter", "cool", "Wistia", "hot", "coolwarm", "bwr", "seismic", "twilight", "afmhot", "rainbow", "jet"])
-colores_fondo = st.selectbox("Color de Fondo", ['white', 'black', 'gray', 'red', 'blue', 'green', 'yellow', 'purple', 'orange', 'pink'])
-summary_length = st.slider("Longitud del resumen", min_value=10, max_value=1000, value=250, step=5)
-summarizer_options = ["BART", "BERT", "BERT2", "BERT3", "DeepESP", "marian", "Pegasus", "flax", "gextractive", "gextractive2"]
+    if st.button("Guardar PDF"):
+        # Crear un objeto de lienzo PDF
+        c = canvas.Canvas("output.pdf", pagesize=letter)
 
-with st.expander("Seleccionar Modelo"):
-    selected_option = st.radio("Modelo:", summarizer_options, index=summarizer_options.index("Pegasus"))
-    st.write("Selección total:", selected_option)
+        # Guardar cada contenido en el archivo PDF
+        for contenido in resultados:
+            tipo_contenido = contenido[0]
+            contenido_texto = contenido[1]
 
-    # Aquí puedes agregar las opciones de configuración que deseas mostrar al usuario
-    # st.sidebar.slider, st.sidebar.checkbox, st.sidebar.selectbox, etc.
+            # Guardar imágenes en el archivo PDF
+            if isinstance(contenido_texto, str) and contenido_texto.startswith("<Figure"):
+                figura = st.markdown_to_html(contenido_texto)
+                c.showPage()
+                c.save()
+
+            # Guardar texto en el archivo PDF
+            else:
+                c.setFont("Helvetica", 12)
+                c.drawString(100, 700, tipo_contenido)
+                c.drawString(100, 680, contenido_texto)
+                c.showPage()
+                c.save()
+
+# pdf_download_link = f'<a href="output.pdf" download>Descargar PDF</a>'
+# st.sidebar.markdown(pdf_download_link, unsafe_allow_html=True)
 
 # Separador
-st.markdown('<div class="separator"></div>', unsafe_allow_html=True)
+# st.markdown('<div class="separator"></div>', unsafe_allow_html=True)
 
 # Análisis de Sentimiento
+st.subheader("Análisis de Sentimiento")
+if st.button("Analizar"):
+    sentences = sent_tokenize(text_input)
+    sentiment_scores = []
+    word_count = 0  # Variable para almacenar la cantidad total de palabras
 
-if generar_resultados_flag:
-        st.header("Análisis de Texto")
-        st.subheader("Análisis de Sentimiento")
-        sentences = sent_tokenize(text_input)
-        sentiment_scores = []
-        word_count = 0  # Variable para almacenar la cantidad total de palabra
+    for sentence in sentences:
+        sentiment_label, compound_score, scores = analyze_sentiment(sentence, language='es')
+        sentiment_scores.append(scores)
+        word_count += len(sentence.split())  # Contar las palabras de la oración y sumarlas al total
 
-        for sentence in sentences:
-            sentiment_label, compound_score, scores = analyze_sentiment(sentence, language='es')
-            sentiment_scores.append(scores)
-            word_count += len(sentence.split())  # Contar las palabras de la oración y sumarlas al total
+    sentiment_df = pd.DataFrame(sentiment_scores)
+    sentiment_total = sentiment_df['compound'].sum() / word_count  # Dividir la puntuación por la cantidad de palabras
 
-        sentiment_df = pd.DataFrame(sentiment_scores)
-        sentiment_total = sentiment_df['compound'].sum() / word_count  # Dividir la puntuación por la cantidad de palabras
+    # Resto del código...
 
-        # Mostrar los resultados
-        col1, col2 = st.columns(2)
-        col1.write(["Puntuación de sentimiento:", sentiment_total])
-        col2.write(get_sentiment_label(sentiment_total))
-        col2.image(get_sentiment_image(sentiment_total))
 
-        fig, ax = plt.subplots(2, 2, figsize=(12, 8))
-        ax[0, 0].hist(sentiment_df['neg'], bins=10, color='red', alpha=0.5, edgecolor='black')
-        ax[0, 0].set_title("Distribución de Sentimiento Negativo")
-        ax[0, 0].set_xlabel("Sentimiento Negativo")
-        ax[0, 0].set_ylabel("Frecuencia")
+    # sentiment_label, sentiment_scores = analyze_sentiment(text_input, language)
+    col1, col2 = st.columns(2)
+    col1.write(["Puntuación de sentimiento:", sentiment_total])
+    col2.write(get_sentiment_label(sentiment_total))
+    col2.image(get_sentiment_image(sentiment_total))
+    
+    fig, ax = plt.subplots(2, 2, figsize=(12, 8))
+    ax[0, 0].hist(sentiment_df['neg'], bins=10, color='red', alpha=0.5, edgecolor='black')
+    ax[0, 0].set_title("Distribución de Sentimiento Negativo")
+    ax[0, 0].set_xlabel("Sentimiento Negativo")
+    ax[0, 0].set_ylabel("Frecuencia")
 
-        ax[0, 1].hist(sentiment_df['neu'], bins=10, color='gray', alpha=0.5, edgecolor='black')
-        ax[0, 1].set_title("Distribución de Sentimiento Neutral")
-        ax[0, 1].set_xlabel("Sentimiento Neutral")
-        ax[0, 1].set_ylabel("Frecuencia")
+    ax[0, 1].hist(sentiment_df['neu'], bins=10, color='gray', alpha=0.5, edgecolor='black')
+    ax[0, 1].set_title("Distribución de Sentimiento Neutral")
+    ax[0, 1].set_xlabel("Sentimiento Neutral")
+    ax[0, 1].set_ylabel("Frecuencia")
 
-        ax[1, 0].hist(sentiment_df['pos'], bins=10, color='green', alpha=0.5, edgecolor='black')
-        ax[1, 0].set_title("Distribución de Sentimiento Positivo")
-        ax[1, 0].set_xlabel("Sentimiento Positivo")
-        ax[1, 0].set_ylabel("Frecuencia")
+    ax[1, 0].hist(sentiment_df['pos'], bins=10, color='green', alpha=0.5, edgecolor='black')
+    ax[1, 0].set_title("Distribución de Sentimiento Positivo")
+    ax[1, 0].set_xlabel("Sentimiento Positivo")
+    ax[1, 0].set_ylabel("Frecuencia")
 
-        ax[1, 1].bar(['Compound'], [sentiment_total], color='purple', alpha=0.5, edgecolor='black')
-        ax[1, 1].set_title("Puntuación de Sentimiento Compuesto")
-        ax[1, 1].set_ylabel("Puntuación")
+    ax[1, 1].bar(['Compound'], [sentiment_total], color='purple', alpha=0.5,edgecolor='black')
+    ax[1, 1].set_title("Puntuación de Sentimiento Compuesto")
+    ax[1, 1].set_ylabel("Puntuación")
 
-        plt.tight_layout()
-        st.pyplot(fig)
+    plt.tight_layout()
+    st.pyplot(fig)
 
-        # Almacenar los resultados en el estado
-        st.session_state.resultados.append(("Análisis de Sentimiento", sentiment_total))
+    # Separador
+    st.markdown('<div class="separator"></div>', unsafe_allow_html=True)
 
-        if st.session_state.guardar_pdf_flag:
-            guardar_pdf_resultados(st.session_state.resultados)
+    # Almacenar los resultados en el estado
+    st.session_state.resultados.append(("Análisis de Sentimiento", sentiment_total))
+    # Guardar y mostrar el botón de descarga del PDF
+    content = [
+        "Análisis de Sentimiento",
+        "Puntuación de sentimiento: {}".format(sentiment_total),
+        # Agrega aquí más información para incluir en el PDF
+    ]
+    pdf_filename = guardar_pdf(content)
+    download_link = get_pdf_download_link(pdf_filename, "Descargar PDF")
+    st.markdown(download_link, unsafe_allow_html=True)
+# Mostrar los resultados generados en la interfaz
+    # for resultado in st.session_state.resultados:
+    #     st.write(resultado)
 
-        # Separador
-        st.markdown('<div class="separator"></div>', unsafe_allow_html=True)
+# Separador
+# st.markdown('<div class="separator"></div>', unsafe_allow_html=True)
 
 # Palabras más frecuentes
+st.subheader("Palabras más frecuentes")
+# Separador
+# st.markdown('<div class="separator"></div>', unsafe_allow_html=True)
 
-if generar_resultados_flag:
-    st.subheader("Palabras más frecuentes")
+num_words = st.slider("Cantidad de Palabras", 5, 25, 10)
+if st.button("Mostrar"):
     stop_words = get_stopwords()
     min_word_length = 3
     top_words = get_top_words(text_input, stop_words, num_words, min_word_length)
@@ -698,62 +670,68 @@ if generar_resultados_flag:
         plt.title("Palabras más frecuentes")
         plt.xticks(rotation=45)
         st.pyplot(plt.gcf())
+        save_image(plt, "palabras_frecuentes.png")
+        resultados.append(("Palabras más frecuentes", top_words))
+    else:
+        st.warning("No se encontraron palabras frecuentes.")
 
-        # Almacenar los resultados en el estado
-        st.session_state.resultados.append(("Palabras más frecuentes", top_words))
+# Separador
+# st.markdown('<div class="separator"></div>', unsafe_allow_html=True)
 
-    # Guardar en PDF si se activó la opción
-    if st.session_state.guardar_pdf_flag:
-        guardar_pdf_resultados(st.session_state.resultados)
-
-      # Separador
-        st.markdown('<div class="separator"></div>', unsafe_allow_html=True)
 # Generar Resumen
+st.subheader("Generar Resumen")
 
-if generar_resultados_flag:
-    # Mostrar la selección total
-    st.subheader("Generar Resumen")
-    summarizer = selected_option if selected_option else ""
-    st.write("Resumen generado:")
+# Separador
+# st.markdown('<div class="separator"></div>', unsafe_allow_html=True)
+
+# Crear la interfaz de Streamlit
+# summarizer = st.selectbox("Seleccionar summarizer", ["BART", "BERT", "BERT2", "T5", "marian", "Pegasus", "flax", "gextractive"])
+# text_input = st.text_area("Introducir texto")
+summarizer_options = ["BART", "BERT", "BERT2", "DeepESP", "marian", "Pegasus", "flax", "gextractive"]
+
+with st.expander("Seleccionar Modelo"):
+    selected_option = st.radio("Modelo:", summarizer_options, index=summarizer_options.index("Pegasus"))
+
+# Mostrar la selección total
+summarizer = selected_option if selected_option else ""
+st.write("Selección total:", summarizer)
+
+summary_length = st.slider("Longitud del resumen", min_value=10, max_value=1000, value=250, step=5)
+
+if st.button("Generar Resumen"):
     summary = generar_resumen(summarizer, text_input, summary_length)
     if summary:
-            copiar_texto(summary)
-            guardar_texto(summary)
+        copiar_texto(summary)
+        guardar_texto(summary)
 
-            # Almacenar los resultados en el estado
-            st.session_state.resultados.append(("Generar Resumen", summary))
-
-    # Guardar en PDF si se activó la opción
-            if st.session_state.guardar_pdf_flag:
-                guardar_pdf_resultados(st.session_state.resultados)
-    # Separador
-    st.markdown('<div class="separator"></div>', unsafe_allow_html=True)
+# Separador
+st.markdown('<div class="separator"></div>', unsafe_allow_html=True)
 
 # Nube de Palabras
+st.subheader("Nube de Palabras")
 
-if generar_resultados_flag:
-    st.subheader("Nube de Palabras")
+# Separador
+# st.markdown('<div class="separator"></div>', unsafe_allow_html=True)
+
+max_words = st.slider("Cantidad de Palabras en la Nube", 25, 300, 150)
+cloud_type = st.radio("Tipo de Nube", ["wordcloud", "barchart"])
+color_map = st.selectbox("Mapa de Colores", ["viridis", "plasma", "inferno", "magma", "cividis", "gray", "spring", "summer", "autumn", "winter", "cool", "Wistia", "hot", "coolwarm", "bwr", "seismic", "twilight", "afmhot", "rainbow", "jet"])
+colores_fondo = st.selectbox("Color de Fondo", ['white', 'black', 'gray', 'red', 'blue', 'green', 'yellow', 'purple', 'orange', 'pink'])
+if st.button("Generar"):
     if cloud_type == "wordcloud":
         stop_words = get_stopwords()
-        min_word_length = 3
-        top_words_cloud = get_top_words(text_input, stop_words, max_words, min_word_length)
-
+        min_word_length=3
+        top_words_cloud = get_top_words(text_input, stop_words, max_words, min_word_length)  # Obtener las palabras frecuentes
         if top_words_cloud:
-            word_cloud_text = " ".join([word[0] for word in top_words_cloud])
-            generate_wordcloud(word_cloud_text, max_words, stop_words, color_map, colores_fondo, min_word_length=3)
-
-            # Almacenar los resultados en el estado
-            st.session_state.resultados.append(("Nube de Palabras", top_words_cloud))
-
-        # Guardar en PDF si se activó la opción
-        if st.session_state.guardar_pdf_flag:
-            guardar_pdf_resultados(st.session_state.resultados)
-
+            word_cloud_text = " ".join([word[0] for word in top_words_cloud])  # Unir las palabras en un solo texto
+            generate_wordcloud(word_cloud_text, max_words, stop_words, color_map, colores_fondo, min_word_length=3)  # Pasar el texto a la función generate_wordcloud
+            resultados.append(("Nube de Palabras", top_words_cloud))
+        else:
+            st.warning("No se encontraron palabras frecuentes.")
     else:
         stop_words = get_stopwords()
-        min_word_length = 3
+        min_word_length=3
         top_words_cloud = get_top_words(text_input, stop_words, max_words, min_word_length)
-
         if top_words_cloud:
             words_cloud, counts_cloud = zip(*top_words_cloud)
             plt.figure(figsize=(10, 5))
@@ -764,44 +742,28 @@ if generar_resultados_flag:
             plt.xticks(rotation=45)
             plt.set_cmap(color_map)
             st.pyplot(plt.gcf())
+            resultados.append(("Palabras más frecuentes (Nube de Palabras)", top_words_cloud))
+        else:
+            st.warning("No se encontraron palabras frecuentes.")
 
-            # Almacenar los resultados en el estado
-            st.session_state.resultados.append(("Palabras más frecuentes (Nube de Palabras)", top_words_cloud))
+# Interfaz de Streamlit
+st.title("Mejores Frases")
 
-        # Guardar en PDF si se activó la opción
-        if st.session_state.guardar_pdf_flag:
-            guardar_pdf_resultados(st.session_state.resultados)
-
-    # Separador
-        st.markdown('<div class="separator"></div>', unsafe_allow_html=True)
-
-        # Separador
-        st.markdown('<div class="separator"></div>', unsafe_allow_html=True)
 # Botón para mostrar las 10 mejores frases
+summary_length = st.slider("Cantidad de Frases", 2, 10, 2)
 
-if generar_resultados_flag:
-        frases = print_summary_sentences(text_input, summary_length1)
-        st.title("Frases")
-        for i, frase in enumerate(frases, start=1):
-            st.write(f"Frase {i}: {frase}")
-        if frases:
-            frases_texto = "\n".join(frases)  # Unir las frases en un solo texto separadas por saltos de línea
-            st.button("Copiar al portapapeles2", on_click=lambda: pyperclip.copy(frases_texto))
-            guardar_texto(frases_texto)
+if st.button("Frases"):
+    frases = print_summary_sentences(text_input, summary_length)
+    for i, frase in enumerate(frases, start=1):
+        st.write(f"Frase {i}: {frase}")
 
-            # Almacenar los resultados en el estado
-            st.session_state.resultados.append(("Frases", {
-                "Cantidad de Frases": summary_length,
-                "Frases Generadas": frases,
-                "Texto Completo": frases_texto
-            }))
-
-            # Guardar en PDF si se activó la opció# Guardar en PDF si se activó la opción
-            if st.session_state.guardar_pdf_flag:   
-                guardar_pdf_resultados(st.session_state.resultados)
+    if frases:
+        frases_texto = "\n".join(frases)  # Unir las frases en un solo texto separadas por saltos de línea
+        st.button("Copiar al portapapeles", on_click=lambda: pyperclip.copy(frases_texto))
+        guardar_texto(frases_texto)
 
 
-        # Separador
-        st.markdown('<div class="separator"></div>', unsafe_allow_html=True)
-
+# Mostrar los resultados generados en la interfaz
+# for contenido in st.session_state.resultados:
+#     st.write(contenido)
 

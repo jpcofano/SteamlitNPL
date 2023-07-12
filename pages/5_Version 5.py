@@ -499,34 +499,34 @@ def generate_summary_flax(text, summary_length):
 def generar_resumen(summarizer, text_input, summary_length):
     try:
         if summarizer == "BART":
-            # summary = generate_summary_bart(text_input, summary_length)
-            texto_adicional = "Cloud Streamlit sin recursos, ejecutar local"
-            # st.write("Texto adicional:")
-            st.write(texto_adicional)
+            summary = generate_summary_bart(text_input, summary_length)
+            # texto_adicional = "Cloud Streamlit sin recursos, ejecutar local"
+            # # st.write("Texto adicional:")
+            # st.write(texto_adicional)
         elif summarizer == "BERT":
             summary = generate_summary_bert(text_input, summary_length)
         elif summarizer == "BERT2":
-            # summary = generate_summary_bart_spanish(text_input, summary_length)
-            texto_adicional = "Cloud Streamlit sin recursos, ejecutar local"
-            # st.write("Texto adicional:")
-            st.write(texto_adicional)
+             summary = generate_summary_bart_spanish(text_input, summary_length)
+            # texto_adicional = "Cloud Streamlit sin recursos, ejecutar local"
+            # # st.write("Texto adicional:")
+            # st.write(texto_adicional)
         elif summarizer == "BERT3":
                 min_length=200
                 summary = generate_summary_bart2(text_input, summary_length, min_length)        
         elif summarizer == "DeepESP":
             summary = generate_summary_DeepESP_spanish(text_input, summary_length)
         elif summarizer == "marian":
-            # summary = generate_summary_marian_spanish(text_input, summary_length)
-            texto_adicional = "Cloud Streamlit sin recursos, ejecutar local"
-            # st.write("Texto adicional:")
-            st.write(texto_adicional)
+             summary = generate_summary_marian_spanish(text_input, summary_length)
+            # texto_adicional = "Cloud Streamlit sin recursos, ejecutar local"
+            # # st.write("Texto adicional:")
+            # st.write(texto_adicional)
         elif summarizer == "Pegasus":
-            # summary = generate_summary_Pegasus(text_input, summary_length)
-            texto_adicional = "Cloud Streamlit sin recursos, ejecutar local"
-            # st.write("Texto adicional:")
-            st.write(texto_adicional)
+            summary = generate_summary_Pegasus(text_input, summary_length)
+            # texto_adicional = "Cloud Streamlit sin recursos, ejecutar local"
+            # # st.write("Texto adicional:")
+            # st.write(texto_adicional)
         elif summarizer == "flax":
-            # text_input = remove_punctuation(text_input)
+            text_input = remove_punctuation(text_input)
             summary = generate_summary_flax(text_input, summary_length)
         elif summarizer == "gextractive":
             summary = generate_extractive_summary(text_input, summary_length)
